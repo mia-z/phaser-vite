@@ -1,110 +1,86 @@
 import Phaser, { GameObjects, Geom } from 'phaser';
+import TileFactory from '../factories/TileFactory';
 import { Tile } from '../objects/Tile';
 
 const gridSize: number = 6;
 const baseTileSide: number = Math.floor(600 / gridSize);
-var tiles: GameObjects.Rectangle[][] = [];
-
-let elapsed = 0;
+var tiles: Tile[] = [];
 
 export default class Game extends Phaser.Scene {
+	collisionGroup?: Phaser.Physics.Arcade.Group;
+	tileFactory: TileFactory;
 	constructor() {
 		super('GameScene');
+		this.tileFactory = new TileFactory(this);
 	}
 
 	init = () => {
-		
-		
+				
 	}
 
 	preload = () => {
-		
+		this.load.image("coin", "assets/coin.svg");
+		this.load.image("sword", "assets/gladius.svg");
+		this.load.image("healthPotion", "assets/health-potion.svg");
+		this.load.image("shield", "assets/shield.svg");
+		this.load.image("skull", "assets/skull-white.svg");
 	}
 
 	create = () => {
-		this.add.grid(0, 0, 600, 600, baseTileSide, baseTileSide, 0x000, 1, 0xFFF, 1).setOrigin(0);
-		for (let x = 0; x < gridSize; x++) {
-			tiles[x] = [];
-			for (let y = 0; y < gridSize; y++) {
-				tiles[x][y] = this.add
-					.rectangle(
-						x * baseTileSide,
-						y * baseTileSide,
-						baseTileSide,
-						baseTileSide,
-						0xFF0000,
-						1
-					)
-					.setInteractive()
-					.on("pointerdown", (event: any) => tiles[x][y].fillColor = 0xFFFF00)
-					.on("pointermove", (event: any) => console.log(event))
-					.setOrigin(0);
+		this.physics.world.checkCollision.up = false;
+		this.physics.world.checkCollision.left = false;
+		this.physics.world.checkCollision.right = false;
+		this.physics.world.gravity.y = 3300;
+		this.buildGrid();
+		this.collisionGroup = this.physics.add.group({
+			defaultKey: "tile",
+			bounceY: 0,
+			collideWorldBounds: true
+		});
 
+		this.collisionGroup.addMultiple(tiles);
+
+		this.physics.add.collider(this.collisionGroup, this.collisionGroup, (t1, t2) => {
+			var b1 = t1.body;
+			var b2 = t2.body;
+
+			if (b1.y > b2.y) {
+				b2.y += (b1.top - b2.bottom);
+				b2.stop();
+			}
+			else {
+				b1.y += (b2.top - b1.bottom);
+				b1.stop();
+			}
+		});
+
+		this.events.on("replaceTile", (data: any) => this.replaceTile(data));
+	}
+
+	update = (time: number, delta: number) => {
+		
+	}
+
+	buildUi = () => {
+
+	}
+
+	buildGrid = () => {
+		let count = 0;
+		for (let x = 0; x < gridSize; x++) {
+			for (let y = 0; y < gridSize; y++) {
+				var newTile = this.tileFactory.GenerateRandomTile(x, y);
+				tiles.push(newTile);
+				this.add.existing(tiles[count]);
+				count++;
 			}
 		}
 	}
 
-	drawn = false;
-	update = (time: number, delta: number) => {
-		if (!this.drawn) {
-			this.drawPath();
-			this.drawn = true;
-		}
-	}
-
-	drawPath = () => {
-
-		// const tl = this.randomTile(1, 4, 1, 4);  
-		// const tr = this.randomTile(5, 9, 1, 4);
-		// const bl = this.randomTile(1, 4, 5, 9);
-		// const br = this.randomTile(5, 9, 5, 9);
-
-		// // tl.fillStyle(0xFFFFFF, 1).fillRect(0, 0, baseTileSide, baseTileSide);
-		// // tr.fillStyle(0xFFFFFF, 1).fillRect(0, 0, baseTileSide, baseTileSide);
-		// // bl.fillStyle(0xFFFFFF, 1).fillRect(0, 0, baseTileSide, baseTileSide);
-		// // br.fillStyle(0xFFFFFF, 1).fillRect(0, 0, baseTileSide, baseTileSide);
-
-		// tl.fillColor = 0xFFFFFF;
-		// tr.fillColor = 0xFFFFFF;
-		// bl.fillColor = 0xFFFFFF;
-		// br.fillColor = 0xFFFFFF;
-
-		// let tllg = new Phaser.Geom.Line(tl.x + (baseTileSide / 2), tl.y + (baseTileSide / 2), tr.x + (baseTileSide / 2), tr.y + (baseTileSide / 2));
-		// let tll = this.add.graphics().strokeLineShape(tllg).lineStyle(1, 0x00FF00, 1);
-		
-		// let trlg = new Phaser.Geom.Line(tr.x + (baseTileSide / 2), tr.y + (baseTileSide / 2), br.x + (baseTileSide / 2), br.y + (baseTileSide / 2));
-		// let trl = this.add.graphics().strokeLineShape(trlg).lineStyle(1, 0x00FF00, 1);
-
-		// let brlg = new Phaser.Geom.Line(br.x + (baseTileSide / 2), br.y + (baseTileSide / 2), bl.x + (baseTileSide / 2), bl.y + (baseTileSide / 2));
-		// let brl = this.add.graphics().strokeLineShape(brlg).lineStyle(1, 0x00FF00, 1);
-
-		// let bllg = new Phaser.Geom.Line(bl.x + (baseTileSide / 2), bl.y + (baseTileSide / 2), tl.x + (baseTileSide / 2), tl.y + (baseTileSide / 2));
-		// let bll = this.add.graphics().strokeLineShape(bllg).lineStyle(1, 0x00FF00, 1);
-
-		// const intersectors = [
-		// 	tllg, trlg, brlg, bllg
-		// ];
-		
-		// let prevTile = null;
-
-		// for (let x = 0; x < gridSize; x++) {
-		// 	for (let y = 0; y < gridSize; y++) {
-		// 		if (intersectors.some(lineGeometry => Geom.Intersects.LineToRectangle(lineGeometry, new Phaser.Geom.Rectangle(tiles[x][y].x, tiles[x][y].y, tiles[x][y].width * 0.9, tiles[x][y].height * 0.9)))) {
-		// 			tiles[x][y].fillColor = 0xFFFFFF;
-		// 			if (!prevTile) {	
-		// 				prevTile = tiles[x][y];
-		// 			} else {
-		// 				//this.add.graphics().strokeLineShape(new Phaser.Geom.Line(prevTile.x + baseTileSide / 2, prevTile.y + baseTileSide / 2, tiles[x][y].x + baseTileSide / 2, tiles[x][y].y  + baseTileSide / 2));
-		// 				prevTile = tiles[x][y];
-		// 			}
-		// 		}
-		// 	}
-		// }
-	}
-
-	randomTile = (xFrom: number = 2, xTo: number = 9, yFrom: number = 2, yTo: number = 9) => {
-		var xCoord: number = Phaser.Math.Between(xFrom, xTo);
-		var yCoord: number = Phaser.Math.Between(yFrom, yTo);
-		return tiles[xCoord][yCoord];
+	replaceTile = (col: number) => {
+		var replacementTile = this.tileFactory.GenerateRandomTile(col);
+		tiles.push(replacementTile);
+		this.add.existing(tiles[tiles.length-1]);
+		this.collisionGroup?.add(tiles[tiles.length-1]);
 	}
 }
