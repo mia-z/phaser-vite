@@ -1,7 +1,7 @@
-import { Tile } from "../objects/Tile";
 import { TileNames, TileTypes } from "../Types/Tile";
 import type { TileName, TileType } from "../Types/Tile";
 import Phaser from "phaser";
+import { Tile } from "../objects/Tile";
 
 const gridSize: number = 6;
 const baseTileSide: number = Math.floor(600 / gridSize);
