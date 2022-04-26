@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MTile</string>
+    <string name="title_activity_main">MTile</string>
+    <string name="package_name">com.miaz.mtile</string>
+    <string name="custom_url_scheme">com.miaz.mtile</string>
+</resources>

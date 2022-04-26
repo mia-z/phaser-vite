@@ -2,7 +2,10 @@ import { defineConfig } from 'vite';
 import replace from '@rollup/plugin-replace';
 
 export default defineConfig({
+  base: "./",
+  publicDir: "./public",
   build: {
+    outDir: "./dist",
     rollupOptions: {
       plugins: [
         //  Toggle the booleans here to enable / disable Phaser 3 features:
