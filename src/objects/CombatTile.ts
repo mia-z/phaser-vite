@@ -2,7 +2,6 @@ import { TileName, TileType } from "../Types/Tile";
 import { TileSprite } from "./TileSprite";
 import Phaser from "phaser";
 import { TileBase } from "./TileBase";
-import { CombatMatchArgs } from "../Types/MatchArgs";
 
 const textStyle: Phaser.Types.GameObjects.Text.TextStyle = { 
     fontFamily: "'Lato', sans-serif", 
@@ -28,9 +27,5 @@ export class CombatTile extends TileBase {
         this.sprite.setOrigin(0.5);
         this.add(this.sprite);
 
-    }
-
-    matchAction = (args?: CombatMatchArgs) =>  {
-        this.destroy();
     }
 }

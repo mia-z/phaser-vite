@@ -2,7 +2,7 @@ import { TileName, TileType } from "../Types/Tile";
 import { TileSprite } from "./TileSprite";
 import Phaser from "phaser";
 import { TileBase } from "./TileBase";
-import { DefenceMatchArgs } from "../Types/MatchArgs";
+import Game from "../scenes/Game";
 
 const textStyle: Phaser.Types.GameObjects.Text.TextStyle = { 
     fontFamily: "'Lato', sans-serif", 
@@ -30,7 +30,23 @@ export class DefenceTile extends TileBase {
 
     }
 
-    matchAction = (args?: DefenceMatchArgs) =>  {
-        this.destroy();
-    }
+    destroy = (): Promise<void> | void => new Promise((resolve, reject) => {
+        let animatedSprite = this.scene.add.sprite(this.x, this.y, this.tileName);
+        animatedSprite.displayHeight = this.height;
+        animatedSprite.displayWidth = this.width;
+        const game = this.scene as Game;
+        super.destroy();
+        game.tweens.add({
+            targets: animatedSprite,
+            props: {
+                x: { value: game.defenceIcon?.x, duration: 400, ease: "Sine" },
+                y: { value: game.defenceIcon?.y, duration: 400, ease: "Power2" },
+                scale: { value: 0.1, duration: 400, ease: "Power2" },
+            },
+            onComplete: (tween, target) => {
+                target.forEach(t => t.destroy());
+                return resolve();
+            }
+        });
+    });
 }

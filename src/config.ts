@@ -1,8 +1,8 @@
-import Phaser from 'phaser';
+import Phaser from "phaser";
 
 export const config: Phaser.Types.Core.GameConfig = {
 	type: Phaser.AUTO,
-	parent: 'game',
+	parent: "game",
 	backgroundColor: "",
 	transparent: true,
 	scale: {
@@ -18,7 +18,8 @@ export const config: Phaser.Types.Core.GameConfig = {
 			fps: 60,
 			gravity: { y: 200 }
 		}
-	}
+	},
+	seed: ["123"]
 };
 
 export default config;

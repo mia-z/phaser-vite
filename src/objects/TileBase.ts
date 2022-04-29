@@ -10,6 +10,8 @@ export class TileBase extends Phaser.GameObjects.Container {
     intersector?: Phaser.Geom.Circle;
     intersectoryOverlay?: Phaser.GameObjects.Graphics;
     
+    shouldAnimate: boolean = false;
+
     constructor(scene: Phaser.Scene, id: number, x: number, y: number, column: number) {
         super(scene, x + baseTileSide/4, y);
 
@@ -17,7 +19,6 @@ export class TileBase extends Phaser.GameObjects.Container {
         this.on("pointerup", this.pointerUpFunc);
         this.on("pointerdown", this.pointerDownFunc);
         this.on("pointermove", this.pointerMoveFunc);
-        this.on("destroy", this.onDestroy);
         this.on("dim", this.onSetDim);
         this.on("undim", this.onUnsetDim);
         this.setInteractive();
@@ -43,11 +44,6 @@ export class TileBase extends Phaser.GameObjects.Container {
 
     pointerUpFunc = (pointer: Phaser.Input.Pointer, localX: number, localY: number, eventData: Phaser.Types.Input.EventData) => {
 
-    }
-
-    onDestroy = () => {
-        this.scene.events.emit("tileDestroy", this.id);
-        this.scene.events.emit("replaceTile", this.column);
     }
 
     onSetDim = () => {

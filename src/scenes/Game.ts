@@ -5,6 +5,7 @@ import { EnemyTile } from '../objects/EnemyTile';
 import { HealingTile } from '../objects/HealingTile';
 import { TileBase } from '../objects/TileBase';
 import { isCombatTile, isCurrencyTile, isDefenceTile, isEnemyTile, isHealingTile, Tile, TileType } from '../Types/Tile';
+import State from '../State';
 
 const textStyle: Phaser.Types.GameObjects.Text.TextStyle = { 
     fontFamily: "'Lato', sans-serif", 
@@ -17,6 +18,8 @@ const gridSize: number = 6;
 const baseTileSide: number = Math.floor(600 / gridSize);
 
 export default class Game extends Phaser.Scene {
+	state?: State;
+
 	collisionGroup?: Phaser.Physics.Arcade.Group;
 	tileFactory: TileFactory;
 
@@ -111,12 +114,10 @@ export default class Game extends Phaser.Scene {
 	}
 
 	init = () => {
-				
+		this.initializeDataAccessors();
 	}
 	
 	preload = () => {
-		//this.load.scenePlugin('rexscaleouterplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexscaleouterplugin.min.js', 'rexScaleOuter', 'rexScaleOuter');
-
 		this.load.image("coin", "assets/coin.svg");
 		this.load.image("sword", "assets/gladius.svg");
 		this.load.image("healthPotion", "assets/health-potion.svg");
@@ -130,11 +131,104 @@ export default class Game extends Phaser.Scene {
 	}
 
 	create = () => {
-		this.physics.world.checkCollision.up = false;
-		this.physics.world.checkCollision.left = false;
-		this.physics.world.checkCollision.right = false;
-		this.physics.world.gravity.y = 3300;
+		this.state = new State(this);
+this.state.on("statechange", (states: State) => console.log(states.state))
+		this.buildUi();
+		this.buildGrid();
+		this.registerCollisions();
+		this.registerHandlers();
+		this.registerAnimations();
 
+		this.state.start("playerTurn");
+	}
+
+	update = (time: number, delta: number) => {
+		if (this.input.pointer1.isDown) {			
+			
+		}
+	}
+
+	/** FRONT END FUNCTIONS */
+	buildUi = () => {
+		this.healthBar = new ProgressBar(this, 20, 20, Math.floor(this.sys.canvas.width/2), 50, 0x27ae60, 0x2ecc71);
+		this.add.existing(this.healthBar);
+		this.healthIcon = this.add.sprite(Math.floor(this.sys.canvas.width/2) + 50, 45, "healthCross").setOrigin(0.5).setTintFill(0x27ae60);
+		this.healthIcon.displayWidth = 45;
+		this.healthIcon.displayHeight = 45;
+		this.healthIcon.name = "healthIcon";
+
+		this.defenceBar = new ProgressBar(this, 20, 90, Math.floor(this.sys.canvas.width/2), 50, 0x2980b9, 0x3498db, 10);
+		this.add.existing(this.defenceBar);
+		this.defenceIcon = this.add.sprite(Math.floor(this.sys.canvas.width/2) + 50, 115, "defenceIcon").setOrigin(0.5).setTintFill(0x2980b9);
+		this.defenceIcon.displayWidth = 45;
+		this.defenceIcon.displayHeight = 45;
+		this.defenceIcon.name = "defenceIcon";
+
+		this.goldText = new Phaser.GameObjects.Text(this, 60, 150, `${this.data.get("playerGold")}`, textStyle);
+		this.add.existing(this.goldText);
+		this.goldIcon = new Phaser.GameObjects.Sprite(this, 20, 150, "moneyBag").setOrigin(0).setTintFill(0xf39c12);
+		this.add.existing(this.goldIcon);
+		this.goldIcon.displayWidth = 45;
+		this.goldIcon.displayHeight = 45;
+		this.goldIcon.name = "goldIcon";
+
+		this.xpText = new Phaser.GameObjects.Text(this, 60 + Math.floor(this.sys.canvas.width/4), 150, `${this.data.get("playerXp")}`, textStyle);
+		this.add.existing(this.xpText);
+		this.xpIcon = new Phaser.GameObjects.Sprite(this, 20 + Math.floor(this.sys.canvas.width/4), 150, "xpIcon").setOrigin(0).setTintFill(0xc0392b);
+		this.add.existing(this.xpIcon);
+		this.xpIcon.displayWidth = 45;
+		this.xpIcon.displayHeight = 45;
+		this.xpIcon.name = "xpIcon";
+
+		this.tileBoxGraphic = new Phaser.GameObjects.Rectangle(this, 0, 300, baseTileSide*6, baseTileSide*6, 0x2C3E50).setOrigin(0).setDepth(-1).setName("container-mask");
+		this.add.existing(this.tileBoxGraphic);
+	}
+
+	buildGrid = () => {
+		let count = 0;
+		for (let x = 0; x < gridSize; x++) {
+			for (let y = 0; y < gridSize; y++) {
+				var newTile = this.tileFactory.GenerateRandomTile(x, y);
+				if (isEnemyTile(newTile)) {
+					newTile.spawnedThisTurn = false;
+				}
+				this.tiles.push(newTile);
+				this.add.existing(this.tiles[count]);
+				count++;
+			}
+		}
+	}
+
+	updateDragLine = (remove: boolean = false) => {
+		if (remove) {
+			this.selectedTiles.pop();
+			this.dragPoints.pop();
+		}
+		this.dragLine?.clear();
+		this.dragLine?.lineStyle(16, 0x000000, 1);
+		this.dragLineFill?.clear();
+		this.dragLineFill?.lineStyle(8, 0xFFFFFF, 1);
+		this.dragLinePath = new Phaser.Curves.Path(this.selectedTiles[0].x, this.selectedTiles[0].y);
+		this.dragLinePath.splineTo(this.dragPoints.map(point => { return new Phaser.Math.Vector2(point.x,point.y) }));
+		this.dragLinePath.draw(this.dragLine as Phaser.GameObjects.Graphics, 128);
+		this.dragLinePath.draw(this.dragLineFill as Phaser.GameObjects.Graphics, 128);
+	}
+
+	dimTiles = (tileType: TileType) => {
+		if (this.checkMatchingTileType(tileType)) {
+			this.tiles.filter(x => !this.checkMatchingTileType(x.tileType)).forEach((tile, index) => tile.emit("dim"));
+		}
+	}
+
+	undimTiles = (tileType: TileType) => {
+		if (this.checkMatchingTileType(tileType)) {
+			this.tiles.filter(x => !this.checkMatchingTileType(x.tileType)).forEach((tile, index) => tile.emit("undim"));
+		}
+	}
+	/** FRONT END FUNCTIONS END */
+
+	/** INITIALIZERS */
+	initializeDataAccessors = () => {
 		this.data.set("playerHp", 20);
 		this.events.on("changedata-playerHp", (gameObject: Phaser.GameObjects.GameObject, value: number) => {
 			this.healthBar?.setMax(value);
@@ -161,14 +255,15 @@ export default class Game extends Phaser.Scene {
 		});
 		this.data.set("playerLevel", 1);
 		this.data.set("playerDamage", 1);
+	}
+	/** INITIALIZERS END */
 
-		this.buildUi();
-		this.buildGrid();
-
-		this.anims.create({
-			key: "slash",
-			frames: this.anims.generateFrameNumbers("slash", { frames: [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ] })
-		});
+	/** FUNCTION REGISTERS */
+	registerCollisions = () => {
+		this.physics.world.checkCollision.up = false;
+		this.physics.world.checkCollision.left = false;
+		this.physics.world.checkCollision.right = false;
+		this.physics.world.gravity.y = 3300;
 
 		this.collisionGroup = this.physics.add.group({
 			defaultKey: "tile",
@@ -191,249 +286,63 @@ export default class Game extends Phaser.Scene {
 				b1.stop();
 			}
 		});
+	}
 
-		this.events.on("tileDestroy", (id: number) => {
-			this.tiles = this.tiles.filter(x => x.id !== id);
-		});
-
-		this.events.on("replaceTile", (col: number) => {
-			this.replaceTile(col);
-		})
-
-		this.input.on("pointerup", (pointer: Phaser.Input.Pointer) => {
-			if (this.selectedTiles.length > 2) {
-				this.handleSelectedTiles(this.selectedTiles);
-			}
-			this.selectedTiles = [];
-			this.dragPoints = [];
-			this.dragLine?.destroy();
-			this.dragLinePath?.destroy();
-			this.dragLineFill?.destroy();
-			this.undimTiles(this.startingTileType as TileType);
-		});
-
+	registerHandlers = () => {
 		this.events.on("setStartingDragTile", (tile: Tile) => {
-			//console.log(`starting tile: ${tile.tileName}, coords: ${tile.x}, ${tile.y}`);
-			this.startingTileType = tile.tileType;
-			this.selectedTiles.push(tile);
-			this.dragPoints.push({ x: tile.x, y: tile.y });
-			this.dragLine = this.add.graphics();
-			this.dragLineFill = this.add.graphics();
-			this.dimTiles(this.startingTileType as TileType);
+			if (this.state?.state === "playerTurn") {
+				this.startingTileType = tile.tileType;
+				this.selectedTiles.push(tile);
+				this.dragPoints.push({ x: tile.x, y: tile.y });
+				this.dragLine = this.add.graphics();
+				this.dragLineFill = this.add.graphics();
+				this.dimTiles(this.startingTileType as TileType);
+			}
 		});
 
 		this.events.on("draggingIntersect", (tile: Tile) => {
-			if (this.selectedTiles.length < 1) return;
-			if (!this.selectedTiles.some(t => t.id == tile.id)) {
-				let xDistanceDiff = tile.x - this.dragPoints[this.dragPoints.length - 1].x;
-            	let yDistanceDiff = tile.y - this.dragPoints[this.dragPoints.length - 1].y;
-				if (yDistanceDiff > baseTileSide*1.2 || yDistanceDiff < -(baseTileSide*1.2) || xDistanceDiff > baseTileSide*1.2 || xDistanceDiff < -(baseTileSide*1.2)) {
-					console.log("DISTANCE TOO LARGE");
-				} else {
-					this.checkIntersectedTile(tile);
-					this.updateDragLine();
-				}
-			} else if (this.selectedTiles.length > 1 && tile.id == this.selectedTiles[this.selectedTiles.length-2].id) {
-				this.updateDragLine(true);
-			}
-		});
-	}
-
-	update = (time: number, delta: number) => {
-		if (this.input.pointer1.isDown) {			
-			
-		}
-	}
-
-	buildUi = () => {
-		this.healthBar = new ProgressBar(this, 20, 20, Math.floor(this.sys.canvas.width/2), 50, 0x27ae60, 0x2ecc71);
-		this.add.existing(this.healthBar);
-		this.healthIcon = this.add.sprite(Math.floor(this.sys.canvas.width/2) + 50, 45, "healthCross").setOrigin(0.5).setTintFill(0x27ae60);
-		this.healthIcon.displayWidth = 45;
-		this.healthIcon.displayHeight = 45;
-
-
-		this.defenceBar = new ProgressBar(this, 20, 90, Math.floor(this.sys.canvas.width/2), 50, 0x2980b9, 0x3498db, 10);
-		this.add.existing(this.defenceBar);
-		this.defenceIcon = this.add.sprite(Math.floor(this.sys.canvas.width/2) + 50, 115, "defenceIcon").setOrigin(0.5).setTintFill(0x2980b9);
-		this.defenceIcon.displayWidth = 45;
-		this.defenceIcon.displayHeight = 45;
-
-		this.goldText = new Phaser.GameObjects.Text(this, 60, 150, `${this.data.get("playerGold")}`, textStyle);
-		this.add.existing(this.goldText);
-		this.goldIcon = new Phaser.GameObjects.Sprite(this, 20, 150, "moneyBag").setOrigin(0).setTintFill(0xf39c12);
-		this.add.existing(this.goldIcon);
-		this.goldIcon.displayWidth = 35;
-		this.goldIcon.displayHeight = 35;
-
-		this.xpText = new Phaser.GameObjects.Text(this, 60 + Math.floor(this.sys.canvas.width/4), 150, `${this.data.get("playerXp")}`, textStyle);
-		this.add.existing(this.xpText);
-		this.xpIcon = new Phaser.GameObjects.Sprite(this, 20 + Math.floor(this.sys.canvas.width/4), 150, "xpIcon").setOrigin(0).setTintFill(0xc0392b);
-		this.add.existing(this.xpIcon);
-		this.xpIcon.displayWidth = 35;
-		this.xpIcon.displayHeight = 35;
-
-		this.tileBoxGraphic = new Phaser.GameObjects.Rectangle(this, 0, 300, baseTileSide*6, baseTileSide*6, 0x2C3E50).setOrigin(0).setDepth(-1).setName("container-mask");
-		this.add.existing(this.tileBoxGraphic);
-	}
-
-	buildGrid = () => {
-		let count = 0;
-		for (let x = 0; x < gridSize; x++) {
-			for (let y = 0; y < gridSize; y++) {
-				var newTile = this.tileFactory.GenerateRandomTile(x, y);
-				this.tiles.push(newTile);
-				this.add.existing(this.tiles[count]);
-				count++;
-			}
-		}
-	}
-
-	replaceTile = (col: number) => {
-		//console.log("REPLACE");
-		var replacementTile = this.tileFactory.GenerateRandomTile(col);
-		this.tiles.push(replacementTile);
-		this.add.existing(this.tiles[this.tiles.length-1]);
-		this.collisionGroup?.add(this.tiles[this.tiles.length-1]);
-	}
-
-	updateDragLine = (remove: boolean = false) => {
-		if (remove) {
-			this.selectedTiles.pop();
-			this.dragPoints.pop();
-		}
-		this.dragLine?.clear();
-		this.dragLine?.lineStyle(16, 0x000000, 1);
-		this.dragLineFill?.clear();
-		this.dragLineFill?.lineStyle(8, 0xFFFFFF, 1);
-		this.dragLinePath = new Phaser.Curves.Path(this.selectedTiles[0].x, this.selectedTiles[0].y);
-		this.dragLinePath.splineTo(this.dragPoints.map(point => { return new Phaser.Math.Vector2(point.x,point.y) }));
-		this.dragLinePath.draw(this.dragLine as Phaser.GameObjects.Graphics, 128);
-		this.dragLinePath.draw(this.dragLineFill as Phaser.GameObjects.Graphics, 128);
-	}
-
-	checkIntersectedTile = (tile: Tile) => {
-		if (this.isMatchingTileType(tile.tileType)) {
-			this.selectedTiles.push(tile);
-			this.dragPoints.push({ x: tile.x, y: tile.y });
-		}
-	}
-
-	handleSelectedTiles = (selectedTiles: Array<Tile>) => {
-		const damageMod = selectedTiles.filter(x => x.tileType == "combat").length; //Change this to a reducer at some point
-		const promiseArray: Array<Promise<void>> = [];
-
-		selectedTiles.forEach((tile, index) => {
-			if (isEnemyTile(tile)) {
-				let didDie = tile.matchAction({ damage: damageMod + this.playerDamage }); 
-				if (didDie) {
-					this.playerXp += tile.xpReward;
-				}
-			}
-			if (isHealingTile(tile)) {
-				this.playerCurrentHp += tile.healAmount;
-				if (this.playerCurrentHp > this.playerHp) {
-					this.playerCurrentHp = this.playerHp;
-				} else {
-					var animatedPotion = this.add.sprite(tile.x, tile.y, "healthPotion");
-					animatedPotion.displayWidth = tile.width;
-					animatedPotion.displayHeight = tile.height;
-					this.tweens.add({
-						targets: animatedPotion,
-
-						props: {
-							x: { value: this.healthIcon?.x, duration: 200, ease: "Power2" },
-							y: { value: this.healthIcon?.y, duration: 200, ease: "Sine" },
-							scale: { value: 0.1, duration: 200, ease: "Power2" },
-						},
-						onComplete: (tween, target) => {
-							target.forEach(t => t.destroy());
-						}
-					});
-				}
-				tile.matchAction(); 
-			}
-			if (isCombatTile(tile)) {
-				tile.matchAction(); 
-			}
-			if (isCurrencyTile(tile)) {
-				this.playerGold += tile.goldValue;
-				var animatedCoin = this.add.sprite(tile.x, tile.y, "coin");
-				animatedCoin.displayWidth = tile.width;
-				animatedCoin.displayHeight = tile.height;
-				this.tweens.add({
-					targets: animatedCoin,
-					props: {
-						x: { value: this.goldIcon?.x, duration: 200, ease: "Power2" },
-						y: { value: this.goldIcon?.y, duration: 200, ease: "Sine" },
-						scale: { value: 0.1, duration: 200, ease: "Power2" },
-					},
-					onComplete: (tween, target) => {
-						target.forEach(t => t.destroy());
+			if (this.state?.state === "playerTurn") {
+				if (this.selectedTiles.length < 1) return;
+				if (!this.selectedTiles.some(t => t.id == tile.id)) {
+					let xDistanceDiff = tile.x - this.dragPoints[this.dragPoints.length - 1].x;
+					let yDistanceDiff = tile.y - this.dragPoints[this.dragPoints.length - 1].y;
+					if (yDistanceDiff > baseTileSide*1.2 || yDistanceDiff < -(baseTileSide*1.2) || xDistanceDiff > baseTileSide*1.2 || xDistanceDiff < -(baseTileSide*1.2)) {
+						console.log("DISTANCE TOO LARGE");
+					} else {
+						this.checkIntersectedTile(tile);
+						this.updateDragLine();
 					}
-				});
-
-				tile.matchAction();
-			}
-			if (isDefenceTile(tile)) {
-				this.playerCurrentShield += tile.defenceMod;
-				if (this.playerCurrentShield > this.playerShield) {
-					this.playerCurrentShield = this.playerShield;
-				} else {
-					var animatedShield = this.add.sprite(tile.x, tile.y, "shield");
-					animatedShield.displayWidth = tile.width;
-					animatedShield.displayHeight = tile.height;
-					this.tweens.add({
-						targets: animatedShield,
-						props: {
-							x: { value: this.defenceIcon?.x, duration: 200, ease: "Power2" },
-							y: { value: this.defenceIcon?.y, duration: 200, ease: "Sine" },
-							scale: { value: 0.1, duration: 200, ease: "Power2" },
-						},
-						onComplete: (tween, target) => {
-							target.forEach(t => t.destroy());
-						}
-					});
+				} else if (this.selectedTiles.length > 1 && tile.id == this.selectedTiles[this.selectedTiles.length-2].id) {
+					this.updateDragLine(true);
 				}
-				tile.matchAction(); 
 			}
 		});
 
-		this.endTurnAction();
-	}
-
-	endTurnAction = () => {
-		if (this.tiles?.some(x => isEnemyTile(x))) {
-			let attackingEnemies = this.tiles.filter(x => isEnemyTile(x));
-			for (let enemy of attackingEnemies as Array<EnemyTile>) {
-				if (enemy.spawnedThisTurn) {
-					enemy.spawnedThisTurn = false;
-					continue;
+		this.input.on("pointerup", (pointer: Phaser.Input.Pointer) => {
+			if (this.state?.state === "playerTurn") {
+				if (this.selectedTiles.length > 2) {
+					this.state?.next();
 				}
-
-				if (this.playerCurrentShield > 0) {
-					this.playerCurrentShield -= 1;
-					continue;
-				}
-
-				this.playerCurrentHp -= enemy.damage;
+				this.selectedTiles = [];
+				this.dragPoints = [];
+				this.dragLine?.destroy();
+				this.dragLinePath?.destroy();
+				this.dragLineFill?.destroy();
+				this.undimTiles(this.startingTileType as TileType);
 			}
-		}
+		});
 	}
 
-	dimTiles = (tileType: TileType) => {
-		if (this.isMatchingTileType(tileType)) {
-			this.tiles.filter(x => !this.isMatchingTileType(x.tileType)).forEach((tile, index) => tile.emit("dim"));
-		}
+	registerAnimations = () => {
+		this.anims.create({
+			key: "slash",
+			frames: this.anims.generateFrameNumbers("slash", { frames: [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ] })
+		});
 	}
+	/** FUNCTION REGISTERS END */
 
-	undimTiles = (tileType: TileType) => {
-		if (this.isMatchingTileType(tileType)) {
-			this.tiles.filter(x => !this.isMatchingTileType(x.tileType)).forEach((tile, index) => tile.emit("undim"));
-		}
-	}
-
-	isMatchingTileType = (tileType: TileType) => {
+	/** LOGIC FUNCTIONS */
+	checkMatchingTileType = (tileType: TileType) => {
 		switch(tileType) {
 			case "combat": if (this.startingTileType === "enemy" || this.startingTileType === "combat") return true;
 			case "enemy": if (this.startingTileType === "enemy" || this.startingTileType === "combat") return true;
@@ -442,4 +351,12 @@ export default class Game extends Phaser.Scene {
 			case "healing": if (this.startingTileType == tileType) return true;
 		}
 	}
+	
+	checkIntersectedTile = (tile: Tile) => {
+		if (this.checkMatchingTileType(tile.tileType)) {
+			this.selectedTiles.push(tile);
+			this.dragPoints.push({ x: tile.x, y: tile.y });
+		}
+	}
+	/** LOGIC FUNCTIONS END*/
 }

@@ -2,7 +2,7 @@ import { TileName, TileType } from "../Types/Tile";
 import { TileSprite } from "./TileSprite";
 import Phaser, { Math } from "phaser";
 import { TileBase } from "./TileBase";
-import { CurrencyMatchArgs } from "../Types/MatchArgs";
+import Game from "../scenes/Game";
 
 const textStyle: Phaser.Types.GameObjects.Text.TextStyle = { 
     fontFamily: "'Lato', sans-serif", 
@@ -27,10 +27,25 @@ export class CurrencyTile extends TileBase {
         this.sprite = new TileSprite(base.scene, this.tileName);
         this.sprite.setOrigin(0.5);
         this.add(this.sprite);
-
     }
 
-    matchAction = (args?: CurrencyMatchArgs) =>  {
-        this.destroy();
-    }
+    destroy = (): Promise<void> | void => new Promise((resolve, reject) => {
+        let animatedSprite = this.scene.add.sprite(this.x, this.y, this.tileName);
+        animatedSprite.displayHeight = this.height;
+        animatedSprite.displayWidth = this.width;
+        const game = this.scene as Game;
+        super.destroy();
+        game.tweens.add({
+            targets: animatedSprite,
+            props: {
+                x: { value: game.goldIcon?.x, duration: 400, ease: "Sine" },
+                y: { value: game.goldIcon?.y, duration: 400, ease: "Power2" },
+                scale: { value: 0.1, duration: 400, ease: "Power2" },
+            },
+            onComplete: (tween, target) => {
+                target.forEach(t => t.destroy());
+                return resolve();
+            }
+        });
+    });
 }

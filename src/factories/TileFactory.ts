@@ -21,7 +21,7 @@ export class TileFactory {
     GenerateRandomTile = (x: number, y: number = 200): Tile => {
         this.currentDelta++;
 
-        const tileType = TileTypes[Phaser.Math.Between(0, TileTypes.length-1)];
+        const tileType = TileTypes[Phaser.Math.RND.between(0, TileTypes.length-1)];
         const baseValues: TileBase = new TileBase(
             this.scene, //Main Scene
             this.currentDelta, //Current delta of this factory - used to generate a unique value
