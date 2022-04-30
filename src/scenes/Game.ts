@@ -112,10 +112,6 @@ export default class Game extends Phaser.Scene {
 		super('GameScene');
 		this.tileFactory = new TileFactory(this);
 	}
-
-	init = () => {
-		this.initializeDataAccessors();
-	}
 	
 	preload = () => {
 		this.load.image("coin", "assets/coin.svg");
@@ -127,12 +123,13 @@ export default class Game extends Phaser.Scene {
 		this.load.image("xpIcon", "assets/xp-icon.svg");
 		this.load.image("defenceIcon", "assets/defence-icon.svg");
 		this.load.image("moneyBag", "assets/money-bag.svg");
-		this.load.spritesheet("slash", "assets/slashes_meme.png", { frameWidth: 64, frameHeight: 64});
+		//this.load.spritesheet("slash", "assets/slashes_meme.png", { frameWidth: 64, frameHeight: 64});
 	}
 
 	create = () => {
+		this.initializeDataAccessors();
 		this.state = new State(this);
-this.state.on("statechange", (states: State) => console.log(states.state))
+this.state.on("statechange", (states: State) => console.log(states.state));
 		this.buildUi();
 		this.buildGrid();
 		this.registerCollisions();
@@ -142,11 +139,11 @@ this.state.on("statechange", (states: State) => console.log(states.state))
 		this.state.start("playerTurn");
 	}
 
-	update = (time: number, delta: number) => {
-		if (this.input.pointer1.isDown) {			
+	// update = (time: number, delta: number) => {
+	// 	if (this.input.pointer1.isDown) {			
 			
-		}
-	}
+	// 	}
+	// }
 
 	/** FRONT END FUNCTIONS */
 	buildUi = () => {
@@ -260,31 +257,37 @@ this.state.on("statechange", (states: State) => console.log(states.state))
 
 	/** FUNCTION REGISTERS */
 	registerCollisions = () => {
-		this.physics.world.checkCollision.up = false;
-		this.physics.world.checkCollision.left = false;
-		this.physics.world.checkCollision.right = false;
-		this.physics.world.gravity.y = 3300;
+		// this.physics.world.checkCollision.up = false;
+		// this.physics.world.checkCollision.left = false;
+		// this.physics.world.checkCollision.right = false;
+		// this.physics.world.gravity.y = 3300;
 
-		this.collisionGroup = this.physics.add.group({
-			defaultKey: "tile",
-			bounceY: 0,
-			collideWorldBounds: true
-		});
+		// this.collisionGroup = this.physics.add.group({
+		// 	defaultKey: "tile",
+		// 	bounceY: 0,
+		// 	collideWorldBounds: true
+		// });
 
-		this.collisionGroup.addMultiple(this.tiles);
+		// this.collisionGroup.addMultiple(this.tiles);
 
-		this.physics.add.collider(this.collisionGroup, this.collisionGroup, (t1, t2) => {
-			var b1 = t1.body;
-			var b2 = t2.body;
+		// this.physics.add.collider(this.collisionGroup, this.collisionGroup, (t1, t2) => {
+		// 	var b1 = t1.body;
+		// 	var b2 = t2.body;
 
-			if (Math.floor(b1.y) > Math.floor(b2.y)) {
-				b2.y += (b1.top - b2.bottom);
-				b2.stop();
-			}
-			else {
-				b1.y += (b2.top - b1.bottom);
-				b1.stop();
-			}
+		// 	if (b1.y > b2.y) {
+		// 		b2.y += (b1.top - b2.bottom);
+		// 		b2.stop();
+		// 	}
+		// 	else {
+		// 		b1.y += (b2.top - b1.bottom);
+		// 		b1.stop();
+		// 	}
+		// });
+		this.matter.world.setBounds();
+		//this.matter.world.engine.positionIterations = 30;
+    	//this.matter.world.engine.velocityIterations = 30;
+		this.tiles.forEach((tile, index) => {
+			this.matter.add.gameObject(tile);
 		});
 	}
 

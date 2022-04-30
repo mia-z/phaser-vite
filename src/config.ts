@@ -11,14 +11,22 @@ export const config: Phaser.Types.Core.GameConfig = {
 		height: 900,
 		autoCenter: Phaser.Scale.CENTER_BOTH
 	},
+	// physics: {
+	// 	default: "arcade",
+	// 	arcade: {
+	// 		debug: false,
+	// 		fps: 60,
+	// 		gravity: { y: 200 }
+	// 	}
+	// },
 	physics: {
-		default: "arcade",
-		arcade: {
-			debug: false,
-			fps: 60,
-			gravity: { y: 200 }
-		}
-	},
+        default: 'matter',
+        matter: {
+            gravity: {
+                y: 1
+            },
+        }
+    },
 	seed: ["123"]
 };
 

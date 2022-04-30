@@ -18,6 +18,7 @@ export default class State extends FSM {
     
     next_playerTurn = () => "tileActions";
     enter_playerTurn = () => {
+        console.log(this.game.tiles.length);
     }
     exit_playerTurn = () => { /**/}
 
@@ -85,7 +86,8 @@ export default class State extends FSM {
             var replacementTile = this.game.tileFactory.GenerateRandomTile(tile.column);
             this.game.tiles.push(replacementTile);
             this.game.add.existing(this.game.tiles[this.game.tiles.length-1]);
-            this.game.collisionGroup?.add(this.game.tiles[this.game.tiles.length-1]);
+            this.game.matter.add.gameObject(this.game.tiles[this.game.tiles.length-1]);
+            // this.game.collisionGroup?.add(this.game.tiles[this.game.tiles.length-1]);
         });
         await Promise.all(destroyPromises);
         this.next();

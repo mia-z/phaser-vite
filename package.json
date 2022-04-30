@@ -32,6 +32,7 @@
     "@capacitor/android": "^3.5.0",
     "@capacitor/app": "^1.1.1",
     "@capacitor/cli": "^3.5.0",
-    "@capacitor/core": "^3.5.0"
+    "@capacitor/core": "^3.5.0",
+    "phaser3-rex-plugins": "^1.1.69"
   }
 }
