@@ -1309,6 +1309,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"mtile@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "mtile@workspace:."
+  dependencies:
+    "@capacitor/android": ^3.5.0
+    "@capacitor/app": ^1.1.1
+    "@capacitor/cli": ^3.5.0
+    "@capacitor/core": ^3.5.0
+    "@rollup/plugin-alias": ^3.1.9
+    "@rollup/plugin-commonjs": ^21.0.1
+    "@rollup/plugin-replace": ^3.0.1
+    "@types/node": ^17.0.12
+    phaser: ^3.55.2
+    phaser3-rex-plugins: ^1.1.69
+    typescript: ^4.5.5
+    vite: ^2.7.13
+  languageName: unknown
+  linkType: soft
+
 "nanoid@npm:^3.1.30":
   version: 3.2.0
   resolution: "nanoid@npm:3.2.0"
@@ -1481,25 +1500,6 @@ __metadata:
   checksum: bfeeb56d1884eeb8b34e28d68bfe441046d280c117fc5dc50351cd2a35a32dc0739a67f43bb36ad774032c12c5d5a01a16e607a77ef07bd0297ba830e5a5d65e
   languageName: node
   linkType: hard
-
-"phaser3-rollup-typescript@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "phaser3-rollup-typescript@workspace:."
-  dependencies:
-    "@capacitor/android": ^3.5.0
-    "@capacitor/app": ^1.1.1
-    "@capacitor/cli": ^3.5.0
-    "@capacitor/core": ^3.5.0
-    "@rollup/plugin-alias": ^3.1.9
-    "@rollup/plugin-commonjs": ^21.0.1
-    "@rollup/plugin-replace": ^3.0.1
-    "@types/node": ^17.0.12
-    phaser: ^3.55.2
-    phaser3-rex-plugins: ^1.1.69
-    typescript: ^4.5.5
-    vite: ^2.7.13
-  languageName: unknown
-  linkType: soft
 
 "phaser@npm:^3.55.2":
   version: 3.55.2

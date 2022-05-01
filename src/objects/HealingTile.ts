@@ -38,8 +38,8 @@ export class HealingTile extends TileBase {
         game.tweens.add({
             targets: animatedSprite,
             props: {
-                x: { value: game.healthIcon?.x, duration: 400, ease: "Sine" },
-                y: { value: game.healthIcon?.y, duration: 400, ease: "Power2" },
+                x: { value: game.healthBar?.getIconCenter().x, duration: 400, ease: "Sine" },
+                y: { value: game.healthBar?.getIconCenter().y, duration: 400, ease: "Power2" },
                 scale: { value: 0.1, duration: 400, ease: "Power2" },
             },
             onComplete: (tween, target) => {

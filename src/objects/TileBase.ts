@@ -26,8 +26,8 @@ export class TileBase extends Phaser.GameObjects.Container {
         this.id = id;
         this.column = column;
 
-        const mask = new Display.Masks.GeometryMask(this.scene, this.scene.children.getByName("container-mask") as GameObjects.Graphics);
-        this.setMask(mask);
+        //const mask = new Display.Masks.GeometryMask(this.scene, this.scene.children.getByName("container-mask") as GameObjects.Graphics);
+        //this.setMask(mask);
     }
     
     pointerDownFunc = (pointer: Phaser.Input.Pointer, localX: number, localY: number, eventData: Phaser.Types.Input.EventData) => {

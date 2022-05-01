@@ -38,8 +38,8 @@ export class CurrencyTile extends TileBase {
         game.tweens.add({
             targets: animatedSprite,
             props: {
-                x: { value: game.goldIcon?.x, duration: 400, ease: "Sine" },
-                y: { value: game.goldIcon?.y, duration: 400, ease: "Power2" },
+                x: { value: game.goldIcon!.x+22, duration: 400, ease: "Sine" },
+                y: { value: game.goldIcon!.y+22, duration: 400, ease: "Power2" },
                 scale: { value: 0.1, duration: 400, ease: "Power2" },
             },
             onComplete: (tween, target) => {

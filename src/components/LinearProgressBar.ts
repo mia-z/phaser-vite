@@ -7,7 +7,7 @@ const textStyle: Phaser.Types.GameObjects.Text.TextStyle = {
     strokeThickness: 2
 };
 
-export class ProgressBar extends Phaser.GameObjects.Container {
+export class LinearProgressBar extends Phaser.GameObjects.Container {
     width: number;
     height: number;
 
@@ -28,15 +28,15 @@ export class ProgressBar extends Phaser.GameObjects.Container {
     barCurrent: number;
     incrementAmount: number;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, width: number, height: number, backgroundColor: number = 0xFF0000, fillColor: number = 0x00FF00, max: number = 20, current?: number, icon?: string, iconPlacement: "left" | "right" = "left") {
+    constructor(scene: Phaser.Scene, x: number, y: number, width: number, height: number, backgroundColor: number = 0xFF0000, fillColor: number = 0x00FF00, icon?: string, iconPlacement: "left" | "right" = "left") {
         super(scene, x, y);
         this.width = width;
         this.height = height;
         this.backgroundColor = backgroundColor;
         this.fillColor = fillColor;
-        this.max = max;
-        this.current = current ?? max;
-        this.incrementAmount = width / this.max;
+        this.max = (width/7)*6;
+        this.current = 0;
+        this.incrementAmount = (width/7)*6 / this.max;
         this.barMax = this.incrementAmount * this.max; 
         this.barCurrent = this.current * this.incrementAmount;
 
@@ -58,7 +58,8 @@ export class ProgressBar extends Phaser.GameObjects.Container {
 		this.icon.displayWidth = (this.width/7)-5;
 		this.icon.displayHeight = this.height-10;
         this.icon.setTintFill(this.fillColor);
-        this.text = new Phaser.GameObjects.Text(scene, iconPlacement === "left" ? (this.width/2) + ((this.width/7)/2) : (this.width/2) - ((this.width/7)/2), height/2, `${this.current}/${this.max}`, textStyle).setOrigin(0.5);
+
+        this.text = new Phaser.GameObjects.Text(scene, iconPlacement === "left" ? (this.width/2) + ((this.width/7)/2) : (this.width/2) - ((this.width/7)/2), height/2, `${Math.floor(this.current/this.max)}%`, textStyle).setOrigin(0.5);
         this.add(this.text);
     }
 
@@ -69,25 +70,10 @@ export class ProgressBar extends Phaser.GameObjects.Container {
         }
     }
 
-    setMax = (newMax: number) => {
-        this.max = newMax;
-        this.incrementAmount = this.width / this.max;
-        this.barMax = this.incrementAmount * this.max;
-        this.barCurrent = this.current * this.incrementAmount;
-        this.text.text = `${this.current}/${this.max}`;
-
-        const tween = this.scene.tweens.add({
-            targets: this.fill,
-            props: {
-                width: { value: `${this.current * this.incrementAmount}`, duration: 300, ease: "Power2" }
-            }
-        });
-    }
-
     setProgress = (newProgress: number) => {
         this.current = newProgress;
-        this.barCurrent = (newProgress * this.incrementAmount);
-        this.text.text = `${this.current}/${this.max}`;
+        this.barCurrent = Math.floor((this.max / 100) * newProgress);
+        this.text.text = `${newProgress}%`;
 
         const tween = this.scene.tweens.add({
             targets: this.fill,

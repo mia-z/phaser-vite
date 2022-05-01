@@ -67,8 +67,8 @@ export class EnemyTile extends TileBase {
         game.tweens.add({
             targets: animatedSprite,
             props: {
-                x: { value: game.xpIcon?.x, duration: 400, ease: "Sine" },
-                y: { value: game.xpIcon?.y, duration: 400, ease: "Power2" },
+                x: { value: game.xpBar?.getIconCenter().x, duration: 400, ease: "Sine" },
+                y: { value: game.xpBar?.getIconCenter().y, duration: 400, ease: "Power2" },
                 scale: { value: 0.1, duration: 400, ease: "Power2" },
             },
             onComplete: (tween, target) => {

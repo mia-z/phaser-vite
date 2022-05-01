@@ -39,8 +39,8 @@ export class DefenceTile extends TileBase {
         game.tweens.add({
             targets: animatedSprite,
             props: {
-                x: { value: game.defenceIcon?.x, duration: 400, ease: "Sine" },
-                y: { value: game.defenceIcon?.y, duration: 400, ease: "Power2" },
+                x: { value: game.defenceBar?.getIconCenter().x, duration: 400, ease: "Sine" },
+                y: { value: game.defenceBar?.getIconCenter().y, duration: 400, ease: "Power2" },
                 scale: { value: 0.1, duration: 400, ease: "Power2" },
             },
             onComplete: (tween, target) => {
